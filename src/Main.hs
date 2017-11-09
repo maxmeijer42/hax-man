@@ -1,4 +1,5 @@
 module Main where
-
+import Player
+import Hexagon
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = print (toVector NorthEast)
