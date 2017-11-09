@@ -6,7 +6,7 @@ data Player = Player {
     score :: Int,
     bonus :: Maybe Bonus,
     posDirFromPlayer :: PosDir,
-    eatStatus :: Maybe (Event Dot),
+    eatStatus :: Maybe (Event Food),
     fightStatusFromPlayer :: Maybe (Event FightType)
 }
 
@@ -15,7 +15,9 @@ data Enemy = Enemy {
     fightStatusFromEnemy :: Maybe (Event FightType)
 }
 
-data Dot = SuperDot (Maybe (Event ())) | NormalDot (Maybe (Event ()))
+data Dot = Dot
+data SuperDot = SuperDot
+data Food = DotFood Dot | SuperDotFood SuperDot
 
 data Event a = Event {
     timeLeft :: Period,
