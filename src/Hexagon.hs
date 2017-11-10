@@ -1,11 +1,14 @@
 module Hexagon where
+import Control.Monad (join)
+import Control.Arrow ((***))
 import Graphics.Gloss (Point)
 import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV)
 
 -- Represents a position in the grid
-data Position = Position {x :: Int, y :: Int}
+data Position = Position {x :: Int, y :: Int} deriving Show
 
 data Direction = NorthEast | East | SouthEast | SouthWest | West | NorthWest
+    deriving (Enum)
 
 data ScaledDirection = ScaledDirection {
     scale :: Float,
@@ -41,7 +44,7 @@ distance a b = magV (a-b)
 
 -- Calculates the center of a hexagonal cell on the grid
 center :: Position -> Point
-center (Position x y) = (fromIntegral (2*x + ((y+1) `mod` 2)), fromIntegral y * sqrt 3)
+center (Position x y) = (fromIntegral (2*x + ((y+1) `mod` 2)), negate (fromIntegral y * sqrt 3.0))
 
 translate :: Position -> Direction -> Position
 translate (Position x y) = combinedWith . offsets
@@ -62,6 +65,9 @@ translate (Position x y) = combinedWith . offsets
 nextPosition :: PosDir -> Position
 nextPosition (PosDir pos (ScaledDirection 0 _) _) = pos
 nextPosition (PosDir pos d _)                     = pos `translate` unscaled d
+
+middle :: [Point] -> Point
+middle xs = join (***) (/(fromIntegral $ length xs)) $ sum xs
 
 move :: PosDir -> Period -> ScaledDirection -> PosDir
 move pd@(PosDir pos d point) t nextD
