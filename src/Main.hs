@@ -7,7 +7,7 @@ main :: IO ()
 main = playIO (InWindow "Haxman" (400, 400) (0, 0)) -- Or FullScreen
               black            -- Background color
               10               -- Frames per second
-              initialGame      -- Initial state
+              initial          -- Initial state
               view             -- View function
               input            -- Event function
               step             -- Step function
