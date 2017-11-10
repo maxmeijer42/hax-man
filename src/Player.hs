@@ -1,5 +1,8 @@
 module Player where
 import Hexagon
+import Renderable
+import Graphics.Gloss.Data.Color (blue)
+import Graphics.Gloss.Data.Picture (Picture(..))
 data Bonus = Bonus
 
 data Player = Player {
@@ -24,3 +27,6 @@ data Event a = Event {
     info :: a
 }
 data FightType = Winning | Losing
+
+instance Renderable Player where
+    render p = uncurry Translate (point $ posDirFromPlayer p) $ Color blue $ Circle 0.8

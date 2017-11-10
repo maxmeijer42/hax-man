@@ -2,7 +2,7 @@ module Game where
 import Player
 import Hexagon
 import Renderable
-import Control.Arrow ((&&&))
+import Control.Arrow ((&&&),(>>>))
 import Graphics.Gloss.Data.Color (green, red, greyN)
 import Graphics.Gloss.Data.Picture (Picture(..),lineLoop,Path,Point)
 newtype Level = Level [[Cell]] deriving Show
@@ -81,4 +81,6 @@ instance Renderable Level where
     render (Level css) = Pictures $ map render (concat css)
 
 instance Renderable Game where
-    render = Translate (negate 100) 100 . Scale 20 20 . render . level
+    render g = Translate (negate 100) 100 . Scale 20 20 $ render'
+        where
+            render' = Pictures [render $ level g, render $ player g]
