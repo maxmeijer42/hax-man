@@ -3,6 +3,7 @@ import Game
 import Player hiding (Event)
 import Hexagon
 import Renderable
+import Data.Set (insert, delete)
 import Graphics.Gloss.Interface.IO.Game
 main :: IO ()
 main = playIO (InWindow "Haxman" (400, 400) (0, 0)) -- Or FullScreen
@@ -14,7 +15,9 @@ main = playIO (InWindow "Haxman" (400, 400) (0, 0)) -- Or FullScreen
               step             -- Step function
 
 input :: Event -> Game -> IO Game
-input e = return
+input (EventKey k Down _ _) g = return g {keysPressed = insert k (keysPressed g)}
+input (EventKey k Up _ _)   g = return g {keysPressed = delete k (keysPressed g)}
+input _ g = return g
 
 view :: Game -> IO Picture
 view = return . render

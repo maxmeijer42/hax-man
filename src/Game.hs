@@ -2,15 +2,18 @@ module Game where
 import Player
 import Hexagon
 import Renderable
+import Data.Set (Set,empty)
 import Control.Arrow ((&&&),(>>>))
 import Graphics.Gloss.Data.Color (green, red, greyN)
+import Graphics.Gloss.Interface.IO.Game (Key)
 import Graphics.Gloss.Data.Picture (Picture(..),lineLoop,Path,Point)
 newtype Level = Level [[Cell]] deriving Show
 
 data Game = Game {
     player :: Player,
     level :: Level,
-    enemies :: [Enemy]
+    enemies :: [Enemy],
+    keysPressed :: Set Key
 }
 
 data Cell = Cell {
@@ -54,7 +57,7 @@ instance Initial Level where
         initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path Nothing Nothing
 
 instance Initial Game where
-    initial = Game initial initial []
+    initial = Game initial initial [] empty
 
 instance Renderable CellContent where
     render Wall = Color green $ Circle 1
