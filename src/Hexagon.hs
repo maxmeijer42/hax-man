@@ -48,16 +48,15 @@ translate (Position x y) = combinedWith . offsets
   where 
     combinedWith :: (Int, Int) -> Position
     combinedWith (a,b) = Position (x+a) (y+b)
-    negate (a,b) = (-a,-b)
     offsets :: Direction -> (Int, Int)
     -- because we are storing the hexagonal grid in a 2 dimensional array
     -- we need to check the parity of the y coordinate
     offsets NorthEast = ((y+1) `mod` 2, -1)
     offsets East      = (1, 0)
     offsets SouthEast = ((y+1) `mod` 2, 1)
-    offsets SouthWest = negate $ offsets NorthEast
-    offsets West      = negate $ offsets East
-    offsets NorthWest = negate $ offsets SouthEast
+    offsets SouthWest = (-(y `mod` 2), 1)
+    offsets West      = (-1,0)
+    offsets NorthWest = (-(y `mod` 2), -1)
 
 -- The position of the cell we're heading towards
 nextPosition :: PosDir -> Position
