@@ -3,13 +3,12 @@ import Hexagon
 import Renderable
 import Graphics.Gloss.Data.Color (blue, red, white)
 import Graphics.Gloss.Data.Picture (Picture(..), circleSolid)
-data Bonus = Bonus
 
 data Player = Player {
     score :: Int,
-    bonus :: Maybe Bonus,
+    bonus :: Maybe (Event ()),
     posDirFromPlayer :: PosDir,
-    eatStatus :: Maybe (Event Food),
+    eatStatus :: Maybe (Event ()),
     fightStatusFromPlayer :: Maybe (Event FightType)
 }
 
@@ -18,14 +17,13 @@ data Enemy = Enemy {
     fightStatusFromEnemy :: Maybe (Event FightType)
 }
 
-data Dot = Dot deriving (Show,Eq)
-data PowerPellet = SuperDot deriving (Show,Eq)
-data Food = DotFood Dot | PowerPelletFood PowerPellet
+newtype Dot = Dot {dotEatEvent :: Maybe (Event ())} deriving (Show,Eq)
+newtype PowerPellet = PowerPellet {powerPelletEatEvent :: Maybe (Event ())} deriving (Show,Eq)
 
 data Event a = Event {
     timeLeft :: Period,
     info :: a
-}
+} deriving (Show, Eq)
 data FightType = Winning | Losing
 
 instance Renderable Player where

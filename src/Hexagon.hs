@@ -8,7 +8,7 @@ import Graphics.Gloss (Point)
 import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV, dotV)
 
 -- Represents a position in the grid
-data Position = Position {x :: Int, y :: Int} deriving Show
+data Position = Position {x :: Int, y :: Int} deriving (Show, Eq)
 
 data Direction = NorthEast | East | SouthEast | SouthWest | West | NorthWest
     deriving (Enum, Eq, Show, Ord, Bounded)
@@ -73,6 +73,10 @@ nextPosition (PosDir pos d _)                     = pos `translate` unscaled d
 middle :: [Point] -> Point
 middle xs = join (***) (/(fromIntegral $ length xs)) $ sum xs
 
+timeToNextPosition :: PosDir -> Period
+timeToNextPosition pd@(PosDir pos d point) = dist / fromRational (scale d)
+    where dist = distance point (center (nextPosition pd))
+
 move :: PosDir -> Period -> ScaledDirection -> PosDir
 move pd@(PosDir pos d point) t nextD
   | t<=0 || stopped = pd
@@ -99,9 +103,8 @@ move pd@(PosDir pos d point) t nextD
 
     reachingCellCenter = scale d == 0 || nextPoint `closerToOldPointThan` pointAhead
 
-    -- The time it will take to reach the center of the next cell
     timeLeft | scale d == 0 = t
-             | otherwise = t - (distance point nextPoint / fromRational (scale d))
+             | otherwise = t - timeToNextPosition pd
 
 combineDirections :: [Direction] -> [Direction]
 combineDirections d | length d <= 1 = d

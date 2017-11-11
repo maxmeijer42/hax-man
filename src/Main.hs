@@ -4,6 +4,7 @@ import Player hiding (Event)
 import Hexagon
 import Renderable
 import Input
+import Control.Arrow ((>>>))
 import Data.Set (insert, delete)
 import Graphics.Gloss.Interface.IO.Game
 main :: IO ()
@@ -24,8 +25,14 @@ view :: Game -> IO Picture
 view = return . render
 
 step :: Float -> Game -> IO Game
-step f g = return g { player = movePlayer (player g) f direction }
+step f game = return $ (finishEatingDots >>> startEatingDots) g { player = movedPlayer }
     where
+        g :: Game
+        g = game { gameTime = gameTime game + f}
+
+        movedPlayer :: Player
+        movedPlayer = movePlayer (player g) f direction
+
         direction :: ScaledDirection
         -- Take one of the directions or noDirection if there are none
         direction = head $ directions ++ [noDirection]

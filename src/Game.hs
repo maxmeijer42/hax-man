@@ -2,6 +2,7 @@ module Game where
 import Player
 import Hexagon
 import Renderable
+import Data.Maybe (isJust)
 import Data.Set (Set,empty)
 import Control.Arrow ((&&&),(>>>))
 import Graphics.Gloss.Data.Color (green, red, greyN)
@@ -10,19 +11,29 @@ import Graphics.Gloss.Data.Picture (Picture(..),lineLoop,Path,Point)
 newtype Level = Level [[Cell]] deriving Show
 getCell :: Level -> Position -> Cell
 getCell (Level css) (Position x y) = (css!!y)!!x
+setCell :: Level -> Position -> CellContent -> Level
+setCell (Level css) p cc = Level $ map (map apply) css
+    where
+        apply :: Cell -> Cell
+        apply cell | cellPosition cell == p = cell {cellContent = cc}
+                   | otherwise = cell
 
 data Game = Game {
     player :: Player,
     level :: Level,
     enemies :: [Enemy],
-    keysPressed :: Set Key
+    keysPressed :: Set Key,
+    gameTime :: Float
 }
 
 data Cell = Cell {
     cellPosition :: Position,
     cellContent :: CellContent
 } deriving Show
-data CellContent = Path (Maybe Dot) (Maybe PowerPellet) | Wall deriving (Show,Eq)
+data CellContent = Path {
+    pathDot :: Maybe Dot,
+    pathPowerPellet :: Maybe PowerPellet
+} | Wall deriving (Show,Eq)
 
 levelFromCellContents :: [[CellContent]] -> Level
 levelFromCellContents ccss = Level $ zipWith' Cell positionGrid ccss
@@ -56,10 +67,10 @@ instance Initial Player where
               dir = ScaledDirection 0 NorthEast
 
 instance Initial Level where
-        initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path (Just Dot) Nothing
+        initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path (Just $ Dot Nothing) Nothing
 
 instance Initial Game where
-    initial = Game initial initial [] empty
+    initial = Game initial initial [] empty 0
 
 instance Renderable CellContent where
     render Wall = Color green $ Circle 1
@@ -92,3 +103,55 @@ instance Renderable Game where
 
 canMove :: Game -> PosDir -> Direction -> Bool
 canMove Game{level=l} pd d = cellContent (getCell l (translate (nextPosition pd) d)) /= Wall
+
+startEatingDots :: Game -> Game
+startEatingDots g = 
+    when (hasNewDot content || hasNewPowerPellet content) updateGame g
+        where
+        hasNewDot :: CellContent -> Bool
+        hasNewDot (Path (Just (Dot Nothing)) _) = True
+        hasNewDot _ = False
+        hasNewPowerPellet :: CellContent -> Bool
+        hasNewPowerPellet (Path _ (Just (PowerPellet Nothing))) = True
+        hasNewPowerPellet _ = False
+        eatPosition :: Game -> Position
+        eatPosition = nextPosition . posDirFromPlayer . player
+        content :: CellContent
+        content = cellContent (getCell (level g) (eatPosition g))
+        updateGame :: Game -> Game
+        updateGame g = g {
+            player = (player g){eatStatus = eatEvent},
+            level = setCell (level g) (eatPosition g) (updateContent content)
+        } where
+            eatEvent = Just $ Event (gameTime g) ()
+            updateContent :: CellContent -> CellContent
+            updateContent = 
+                when (hasNewDot content) 
+                    (\c->c{pathDot = Just $ Dot eatEvent}) 
+                >>> when (hasNewPowerPellet content) 
+                    (\c->c{pathPowerPellet = Just $ PowerPellet eatEvent})
+
+when :: Bool -> (a->a) -> a -> a
+when False = const id
+when True  = ($)
+
+finishEatingDots :: Game -> Game
+finishEatingDots g@Game{player = p} = g  
+        {
+            level = setCell (level g) eatPosition (Path Nothing Nothing),
+            player = 
+                when hasPowerPellet giveBonus >>>
+                when hasDot incrementScore
+                $ p
+        }
+    where
+        giveBonus :: Player -> Player
+        giveBonus p = p{bonus = Just $ Event (gameTime g) ()}
+
+        incrementScore :: Player -> Player
+        incrementScore p = p{score = score p + 1}
+
+        hasDot = isJust $ pathDot content
+        hasPowerPellet = isJust $ pathPowerPellet content
+        content = cellContent (getCell (level g) eatPosition)
+        eatPosition = (position . posDirFromPlayer . player) g
