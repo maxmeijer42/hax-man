@@ -56,14 +56,14 @@ instance Initial Player where
               dir = ScaledDirection 0 NorthEast
 
 instance Initial Level where
-        initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path Nothing Nothing
+        initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path (Just Dot) Nothing
 
 instance Initial Game where
     initial = Game initial initial [] empty
 
 instance Renderable CellContent where
     render Wall = Color green $ Circle 1
-    render (Path _ _) = Color red $ Circle 1
+    render (Path d s) = Pictures [render d, render s]
 
 hexagonPath :: Path
 -- every vertex is the middle of the centers of 3 hexagons

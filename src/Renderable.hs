@@ -1,4 +1,9 @@
 module Renderable where
-    import Graphics.Gloss (Picture)
-    class Renderable a where
-        render :: a -> Picture
+import Data.Maybe
+import Graphics.Gloss (Picture,blank)
+class Renderable a where
+    render :: a -> Picture
+
+instance Renderable a => Renderable (Maybe a) where
+    render Nothing = blank
+    render (Just x) = render x

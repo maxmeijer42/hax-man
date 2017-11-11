@@ -1,8 +1,8 @@
 module Player where
 import Hexagon
 import Renderable
-import Graphics.Gloss.Data.Color (blue)
-import Graphics.Gloss.Data.Picture (Picture(..))
+import Graphics.Gloss.Data.Color (blue, red)
+import Graphics.Gloss.Data.Picture (Picture(..), circleSolid)
 data Bonus = Bonus
 
 data Player = Player {
@@ -30,6 +30,12 @@ data FightType = Winning | Losing
 
 instance Renderable Player where
     render p = uncurry Translate (point $ posDirFromPlayer p) $ Color blue $ Circle 0.8
+
+instance Renderable Dot where
+    render d = Color red $ Circle 0.3
+
+instance Renderable SuperDot where
+    render d = Color red $ circleSolid 0.4 
 
 movePlayer :: Player -> Float -> ScaledDirection -> Player
 movePlayer p t d = p {posDirFromPlayer = move (posDirFromPlayer p) t d}
