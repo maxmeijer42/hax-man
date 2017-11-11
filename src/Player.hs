@@ -30,3 +30,6 @@ data FightType = Winning | Losing
 
 instance Renderable Player where
     render p = uncurry Translate (point $ posDirFromPlayer p) $ Color blue $ Circle 0.8
+
+movePlayer :: Player -> Float -> ScaledDirection -> Player
+movePlayer p t d = p {posDirFromPlayer = move (posDirFromPlayer p) t d}

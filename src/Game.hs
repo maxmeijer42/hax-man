@@ -51,7 +51,7 @@ instance Initial Player where
         fightStatusFromPlayer = Nothing
     }
         where pos = Position 1 1
-              dir = ScaledDirection 1 NorthEast
+              dir = ScaledDirection 0 NorthEast
 
 instance Initial Level where
         initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path Nothing Nothing

@@ -1,17 +1,20 @@
 module Hexagon where
 import Control.Monad (join)
-import Control.Arrow ((***))
+import Control.Arrow ((***),(>>>),(&&&))
+import Data.List (elemIndex, sortBy)
+import Data.Maybe (fromJust)
+import Data.Ratio ((%),denominator)
 import Graphics.Gloss (Point)
-import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV)
+import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV, dotV)
 
 -- Represents a position in the grid
 data Position = Position {x :: Int, y :: Int} deriving Show
 
 data Direction = NorthEast | East | SouthEast | SouthWest | West | NorthWest
-    deriving (Enum)
+    deriving (Enum, Eq, Show, Ord, Bounded)
 
 data ScaledDirection = ScaledDirection {
-    scale :: Float,
+    scale :: Rational,
     unscaled :: Direction
 }
 
@@ -36,7 +39,7 @@ instance Vectorizable Direction where
     toVector NorthWest = normalizeV (-1,2)
 
 instance Vectorizable ScaledDirection where
-    toVector (ScaledDirection s d) = s `mulSV` toVector d
+    toVector (ScaledDirection s d) = fromRational s `mulSV` toVector d
 
 -- Calculates the distance between two points
 distance :: Point -> Point -> Float
@@ -71,7 +74,7 @@ middle xs = join (***) (/(fromIntegral $ length xs)) $ sum xs
 
 move :: PosDir -> Period -> ScaledDirection -> PosDir
 move pd@(PosDir pos d point) t nextD
-  | stopped = pd
+  | t<=0 || stopped = pd
 
   -- If we can reach a turning point / cell center:
   -- Go to the cell center
@@ -85,14 +88,28 @@ move pd@(PosDir pos d point) t nextD
   where 
     stopped = scale d == 0 && scale nextD == 0
 
-    pointAhead = point + toVector d
+    pointAhead = point + mulSV (t * fromRational (scale d)) (normalizeV (nextPoint - point))
     nextPos = nextPosition pd
     nextPoint = center nextPos
+    oldPoint = center pos
 
-    closerToPointThan :: Point -> Point -> Bool
-    a `closerToPointThan` b = distance point a < distance point b
+    closerToOldPointThan :: Point -> Point -> Bool
+    a `closerToOldPointThan` b = distance oldPoint a - distance oldPoint b < 0.001
 
-    reachingCellCenter = stopped || pointAhead `closerToPointThan` nextPoint
+    reachingCellCenter = scale d == 0 || nextPoint `closerToOldPointThan` pointAhead
 
     -- The time it will take to reach the center of the next cell
-    timeLeft = t - (distance point nextPoint / scale d)
+    timeLeft | scale d == 0 = t
+             | otherwise = t - (distance point nextPoint / fromRational (scale d))
+
+combineDirections :: [Direction] -> [Direction]
+combineDirections d | length d <= 1 = d
+                    | magV avgVector < 0.1 = []
+                    | fst (head dotProducts) - fst (dotProducts!!1) > 0.01 = [snd $ head dotProducts]
+                    | otherwise = map snd $ take 2 dotProducts
+    where
+        avgVector = middle $ map toVector d
+        dotProduct :: Direction -> Float
+        dotProduct = dotV (normalizeV avgVector) . toVector
+        dotProducts :: [(Float, Direction)]
+        dotProducts = sortBy (flip compare) $ map (dotProduct &&& id) [NorthEast .. ]
