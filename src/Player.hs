@@ -19,8 +19,8 @@ data Enemy = Enemy {
 }
 
 data Dot = Dot deriving (Show,Eq)
-data SuperDot = SuperDot deriving (Show,Eq)
-data Food = DotFood Dot | SuperDotFood SuperDot
+data PowerPellet = SuperDot deriving (Show,Eq)
+data Food = DotFood Dot | PowerPelletFood PowerPellet
 
 data Event a = Event {
     timeLeft :: Period,
@@ -34,7 +34,7 @@ instance Renderable Player where
 instance Renderable Dot where
     render d = Color red $ Circle 0.3
 
-instance Renderable SuperDot where
+instance Renderable PowerPellet where
     render d = Color red $ circleSolid 0.4 
 
 movePlayer :: Player -> Float -> ScaledDirection -> Player

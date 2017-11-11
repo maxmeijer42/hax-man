@@ -22,7 +22,7 @@ data Cell = Cell {
     cellPosition :: Position,
     cellContent :: CellContent
 } deriving Show
-data CellContent = Path (Maybe Dot) (Maybe SuperDot) | Wall deriving (Show,Eq)
+data CellContent = Path (Maybe Dot) (Maybe PowerPellet) | Wall deriving (Show,Eq)
 
 levelFromCellContents :: [[CellContent]] -> Level
 levelFromCellContents ccss = Level $ zipWith' Cell positionGrid ccss
