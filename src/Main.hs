@@ -25,7 +25,7 @@ view :: Game -> IO Picture
 view = return . render
 
 step :: Float -> Game -> IO Game
-step f game = return $ (finishEatingDots >>> startEatingDots) g { player = movedPlayer }
+step f game = return $ (finishBonus >>> finishEatingDots >>> startEatingDots) g { player = movedPlayer }
     where
         g :: Game
         g = game { gameTime = gameTime game + f}

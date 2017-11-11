@@ -85,7 +85,7 @@ move pd@(PosDir pos d point) t nextD
   -- Go to the cell center
   -- Turn around into the new direction, if needed
   -- Spend the time that is left moving in the new direction
-  | reachingCellCenter = move (PosDir nextPos nextD nextPoint) timeLeft nextD
+  | reachingCellCenter = move (PosDir nextPos nextD nextPoint) timeStarted nextD
 
   -- Otherwise move on in the same direction as before
   | otherwise = PosDir pos d pointAhead
@@ -103,8 +103,8 @@ move pd@(PosDir pos d point) t nextD
 
     reachingCellCenter = scale d == 0 || nextPoint `closerToOldPointThan` pointAhead
 
-    timeLeft | scale d == 0 = t
-             | otherwise = t - timeToNextPosition pd
+    timeStarted | scale d == 0 = t
+                | otherwise = t - timeToNextPosition pd
 
 combineDirections :: [Direction] -> [Direction]
 combineDirections d | length d <= 1 = d

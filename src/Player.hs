@@ -21,7 +21,7 @@ newtype Dot = Dot {dotEatEvent :: Maybe (Event ())} deriving (Show,Eq)
 newtype PowerPellet = PowerPellet {powerPelletEatEvent :: Maybe (Event ())} deriving (Show,Eq)
 
 data Event a = Event {
-    timeLeft :: Period,
+    timeStarted :: Period,
     info :: a
 } deriving (Show, Eq)
 data FightType = Winning | Losing

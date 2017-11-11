@@ -105,31 +105,29 @@ canMove :: Game -> PosDir -> Direction -> Bool
 canMove Game{level=l} pd d = cellContent (getCell l (translate (nextPosition pd) d)) /= Wall
 
 startEatingDots :: Game -> Game
-startEatingDots g = 
-    when (hasNewDot content || hasNewPowerPellet content) updateGame g
-        where
-        hasNewDot :: CellContent -> Bool
-        hasNewDot (Path (Just (Dot Nothing)) _) = True
-        hasNewDot _ = False
-        hasNewPowerPellet :: CellContent -> Bool
-        hasNewPowerPellet (Path _ (Just (PowerPellet Nothing))) = True
-        hasNewPowerPellet _ = False
-        eatPosition :: Game -> Position
-        eatPosition = nextPosition . posDirFromPlayer . player
-        content :: CellContent
-        content = cellContent (getCell (level g) (eatPosition g))
-        updateGame :: Game -> Game
-        updateGame g = g {
-            player = (player g){eatStatus = eatEvent},
-            level = setCell (level g) (eatPosition g) (updateContent content)
-        } where
-            eatEvent = Just $ Event (gameTime g) ()
-            updateContent :: CellContent -> CellContent
-            updateContent = 
-                when (hasNewDot content) 
-                    (\c->c{pathDot = Just $ Dot eatEvent}) 
-                >>> when (hasNewPowerPellet content) 
-                    (\c->c{pathPowerPellet = Just $ PowerPellet eatEvent})
+startEatingDots g = when (hasNewDot content || hasNewPowerPellet content) updateGame g where
+    hasNewDot :: CellContent -> Bool
+    hasNewDot (Path (Just (Dot Nothing)) _) = True
+    hasNewDot _ = False
+    hasNewPowerPellet :: CellContent -> Bool
+    hasNewPowerPellet (Path _ (Just (PowerPellet Nothing))) = True
+    hasNewPowerPellet _ = False
+    eatPosition :: Game -> Position
+    eatPosition = nextPosition . posDirFromPlayer . player
+    content :: CellContent
+    content = cellContent (getCell (level g) (eatPosition g))
+    updateGame :: Game -> Game
+    updateGame g = g {
+        player = (player g){eatStatus = eatEvent},
+        level = setCell (level g) (eatPosition g) (updateContent content)
+    } where
+        eatEvent = Just $ Event (gameTime g) ()
+        updateContent :: CellContent -> CellContent
+        updateContent = 
+            when (hasNewDot content) 
+                (\c->c{pathDot = Just $ Dot eatEvent}) 
+            >>> when (hasNewPowerPellet content) 
+                (\c->c{pathPowerPellet = Just $ PowerPellet eatEvent})
 
 when :: Bool -> (a->a) -> a -> a
 when False = const id
@@ -155,3 +153,13 @@ finishEatingDots g@Game{player = p} = g
         hasPowerPellet = isJust $ pathPowerPellet content
         content = cellContent (getCell (level g) eatPosition)
         eatPosition = (position . posDirFromPlayer . player) g
+
+bonusLength :: Period
+bonusLength = 5.0
+
+finishBonus :: Game -> Game
+finishBonus g@Game{gameTime = t, player = Player{bonus=(Just Event{timeStarted = b})}} = 
+    if b+bonusLength<t 
+        then g{player=(player g){bonus=Nothing}} 
+        else g
+finishBonus g = g
