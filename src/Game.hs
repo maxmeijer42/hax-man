@@ -8,6 +8,8 @@ import Graphics.Gloss.Data.Color (green, red, greyN)
 import Graphics.Gloss.Interface.IO.Game (Key)
 import Graphics.Gloss.Data.Picture (Picture(..),lineLoop,Path,Point)
 newtype Level = Level [[Cell]] deriving Show
+getCell :: Level -> Position -> Cell
+getCell (Level css) (Position x y) = (css!!y)!!x
 
 data Game = Game {
     player :: Player,
@@ -20,7 +22,7 @@ data Cell = Cell {
     cellPosition :: Position,
     cellContent :: CellContent
 } deriving Show
-data CellContent = Path (Maybe Dot) (Maybe SuperDot) | Wall deriving Show
+data CellContent = Path (Maybe Dot) (Maybe SuperDot) | Wall deriving (Show,Eq)
 
 levelFromCellContents :: [[CellContent]] -> Level
 levelFromCellContents ccss = Level $ zipWith' Cell positionGrid ccss
@@ -87,3 +89,6 @@ instance Renderable Game where
     render g = Translate (negate 100) 100 . Scale 20 20 $ render'
         where
             render' = Pictures [render $ level g, render $ player g]
+
+canMove :: Game -> PosDir -> Direction -> Bool
+canMove Game{level=l} pd d = cellContent (getCell l (translate (nextPosition pd) d)) /= Wall

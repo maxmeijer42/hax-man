@@ -17,6 +17,7 @@ data ScaledDirection = ScaledDirection {
     scale :: Rational,
     unscaled :: Direction
 }
+noDirection = ScaledDirection 0 NorthEast
 
 data PosDir = PosDir{
     position :: Position,

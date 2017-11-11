@@ -24,8 +24,19 @@ view :: Game -> IO Picture
 view = return . render
 
 step :: Float -> Game -> IO Game
-step f g = return g { player = movePlayer (player g) f $ headOrZero $ combineDirections $ activeDirections g }
+step f g = return g { player = movePlayer (player g) f direction }
     where
-        headOrZero :: [Direction] -> ScaledDirection
-        headOrZero [] = ScaledDirection 0 NorthEast
-        headOrZero (x:xs) = ScaledDirection 1 x
+        direction :: ScaledDirection
+        -- Take one of the directions or noDirection if there are none
+        direction = head $ directions ++ [noDirection]
+
+        directions :: [ScaledDirection]
+        directions = map (ScaledDirection 1) (filter allowed chosenDirections)
+
+        allowed :: Direction -> Bool
+        allowed = canMove g (posDirFromPlayer (player g))
+
+        -- The directions that are chosen follow from the combination of
+        -- keys pressed by the user.
+        chosenDirections :: [Direction]
+        chosenDirections = combineDirections $ activeDirections g

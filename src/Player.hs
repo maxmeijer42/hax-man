@@ -18,8 +18,8 @@ data Enemy = Enemy {
     fightStatusFromEnemy :: Maybe (Event FightType)
 }
 
-data Dot = Dot deriving Show
-data SuperDot = SuperDot deriving Show
+data Dot = Dot deriving (Show,Eq)
+data SuperDot = SuperDot deriving (Show,Eq)
 data Food = DotFood Dot | SuperDotFood SuperDot
 
 data Event a = Event {
