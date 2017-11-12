@@ -6,7 +6,7 @@ import Data.Aeson
 import Data.Maybe (fromJust, isJust, isNothing)
 import GHC.Generics (Generic)
 import Graphics.Gloss.Data.Color (blue, red, white, green)
-import Graphics.Gloss.Data.Picture (Picture(..), circleSolid, arcSolid)
+import Graphics.Gloss.Data.Picture (Picture(..), blank, circleSolid, arcSolid)
 
 data Player = Player {
     score :: Int,
@@ -31,7 +31,7 @@ data Event a = Event {
 data FightType = PlayerWinning | PlayerLosing deriving (Eq)
 
 instance Renderable Player where
-    render p f = Pictures [renderPlayer, renderScore]
+    render p f = Pictures [renderPlayer, renderScore, renderGameOver]
         where 
             mouthAngle :: Float
             mouthAngle | isJust (eatStatus p) && eatTimeOffset > 0 && eatTimeOffset < 0.5 = 2*(0.5-eatTimeOffset)*40
@@ -40,6 +40,9 @@ instance Renderable Player where
             eatTimeOffset = f-(timeStarted.fromJust.eatStatus) p-1
             renderPlayer = toPicture (posDirFromPlayer p) $ Color blue $ arcSolid mouthAngle (negate mouthAngle) 0.8
             renderScore =  Scale 0.01 0.01 $ Translate 0 200 $ Color white $ Text ("Score: " ++ show (score p))
+            renderGameOver | isJust (fightStatusFromPlayer p) && (info.fromJust.fightStatusFromPlayer) p == PlayerLosing = 
+                                Scale 0.025 0.025 $ Translate (negate 100) (negate 300) $ Color white $ Text "Game Over!"
+                           | otherwise = blank
 
 instance Renderable Dot where
     render d _ = Color green $ Circle 0.3
