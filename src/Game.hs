@@ -202,6 +202,7 @@ randomElement possibilities g = possibilities!!fst (randomR (0,length possibilit
 spawnEnemy :: RandomGen g => Game -> g -> Game
 spawnEnemy game@Game{player=p,enemies = e} gen 
     | null (availablePositions game) = game
+    | length (enemies game) > 3 = game
     | otherwise = game{enemies = Enemy (fromPosition pos) Nothing : e}
     where pos = randomElement (availablePositions game) gen
     
