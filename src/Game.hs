@@ -74,7 +74,10 @@ instance Initial Player where
               dir = noSpeed East
 
 instance Initial Level where
-    initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path (Just $ Dot Nothing) Nothing    
+    initial = levelFromCellContents $ surroundWithWalls $ (replicate 7 dot :replicate 10 [dot,Wall,dot,Wall,dot,Wall,powerPellet])
+        where 
+            dot = Path (Just $ Dot Nothing) Nothing
+            powerPellet = Path Nothing (Just $ PowerPellet Nothing)
     
 instance Initial Game where
     initial = Game initial initial [] empty 0 False
