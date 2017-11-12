@@ -2,7 +2,7 @@ module Player where
 import Hexagon
 import Renderable
 import Graphics.Gloss.Data.Color (blue, red, white, green)
-import Graphics.Gloss.Data.Picture (Picture(..), circleSolid)
+import Graphics.Gloss.Data.Picture (Picture(..), circleSolid, arcSolid)
 
 data Player = Player {
     score :: Int,
@@ -29,7 +29,7 @@ data FightType = Winning | Losing
 instance Renderable Player where
     render p = Pictures [renderPlayer, renderScore]
         where 
-            renderPlayer = uncurry Translate (point $ posDirFromPlayer p) $ Color blue $ Circle 0.8
+            renderPlayer = toPicture (posDirFromPlayer p) $ Color blue $ arcSolid 40 (negate 40) 0.8
             renderScore =  Scale 0.01 0.01 $ Translate 0 200 $ Color white $ Text ("Score: " ++ show (score p))
 
 instance Renderable Dot where

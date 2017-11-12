@@ -6,6 +6,7 @@ import Data.Maybe (fromJust)
 import Data.Ratio ((%),denominator)
 import System.Random
 import Graphics.Gloss (Point)
+import Graphics.Gloss.Data.Picture (Picture(..))
 import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV, dotV)
 
 -- Represents a position in the grid
@@ -18,7 +19,9 @@ data ScaledDirection = ScaledDirection {
     scale :: Rational,
     unscaled :: Direction
 }
-noDirection = ScaledDirection 0 NorthEast
+
+noSpeed :: Direction -> ScaledDirection
+noSpeed = ScaledDirection 0
 
 data PosDir = PosDir{
     position :: Position,
@@ -27,7 +30,7 @@ data PosDir = PosDir{
 }
 
 fromPosition :: Position -> PosDir
-fromPosition p = PosDir p noDirection (center p)
+fromPosition p = PosDir p (noSpeed East) (center p)
 
 -- A period of time
 type Period = Float
@@ -42,6 +45,9 @@ instance Vectorizable Direction where
     toVector SouthWest = normalizeV (-1,-2)
     toVector West      = (-1,0)
     toVector NorthWest = normalizeV (-1,2)
+
+toAngle :: Direction -> Float
+toAngle e = fromIntegral $ (fromEnum e `mod` 6) * 60 - 60
 
 instance Vectorizable ScaledDirection where
     toVector (ScaledDirection s d) = fromRational s `mulSV` toVector d
@@ -124,3 +130,6 @@ combineDirections d | length d <= 1 = d
 
 isNextTo :: Position -> Position -> Bool
 isNextTo a b = any (\d -> a `translate` d == b) [NorthEast .. ] 
+
+toPicture :: PosDir -> Picture -> Picture
+toPicture pd = uncurry Translate (point pd) . Rotate ((toAngle . unscaled . direction) pd)

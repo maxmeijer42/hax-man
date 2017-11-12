@@ -36,11 +36,11 @@ step f game = if paused game then return game else spawnEnemies getStdGen purePa
         g = game { gameTime = gameTime game + f}
 
         movedPlayer :: Player
-        movedPlayer = movePlayer (player g) f direction
+        movedPlayer = movePlayer (player g) f dir
 
-        direction :: ScaledDirection
+        dir :: ScaledDirection
         -- Take one of the directions or noDirection if there are none
-        direction = head $ directions ++ [noDirection]
+        dir = head $ directions ++ [(noSpeed . unscaled . direction . posDirFromPlayer . player) g]
 
         directions :: [ScaledDirection]
         directions = map (ScaledDirection 1) (filter allowed chosenDirections)
