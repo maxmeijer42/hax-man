@@ -28,7 +28,7 @@ data Event a = Event {
     timeStarted :: Period,
     info :: a
 } deriving (Show, Eq,Generic)
-data FightType = Winning | Losing
+data FightType = PlayerWinning | PlayerLosing deriving (Eq)
 
 instance Renderable Player where
     render p f = Pictures [renderPlayer, renderScore]
@@ -64,3 +64,15 @@ movePlayer p t d = p {posDirFromPlayer = move (posDirFromPlayer p) t d}
 
 moveEnemy :: Enemy -> Float -> ScaledDirection -> Enemy 
 moveEnemy e t d = e {posDirFromEnemy = move (posDirFromEnemy e) t d}
+
+hitsPlayer :: Enemy -> Player -> Bool
+hitsPlayer e p = distance ((point.posDirFromPlayer) p) ((point.posDirFromEnemy) e) < 0.8
+
+startFighting :: Player -> Float -> Player
+startFighting p@Player{bonus=b} t = p{fightStatusFromPlayer = Just $ Event t i} where
+    i | isJust b = PlayerWinning
+      | otherwise = PlayerLosing
+
+fightPlayer :: Enemy -> Player -> Enemy
+fightPlayer enemy player | hitsPlayer enemy player = enemy{fightStatusFromEnemy = fightStatusFromPlayer player}
+                         | otherwise = enemy

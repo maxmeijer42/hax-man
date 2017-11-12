@@ -47,18 +47,36 @@ view g = return (g `render` gameTime g)
 step :: Float -> Game -> IO Game
 step f game = if paused game then return game else spawnEnemies getStdGen purePart
     where
-        purePart = finishEatingDots >>> startEatingDots >>> finishBonus
-                        $ g { player = movedPlayer, enemies = movedEnemies }
+        purePart = performFights >>> finishEatingDots >>> startEatingDots >>> finishBonus
+                   $ g { player = movedPlayer, enemies = movedEnemies }
+
+        performFights :: Game -> Game
+        performFights g | null attackedEnemies = g
+                        | otherwise = g {
+                            player = player',
+                            enemies = map (`fightPlayer` player') (enemies g)
+                            }
+            where player' = startFighting (player g) (gameTime g)
+
+        attackedEnemies :: [Enemy]
+        attackedEnemies = filter (`hitsPlayer` player g) (enemies g)
 
         g :: Game
         g = game { gameTime = gameTime game + f}
 
         movedPlayer :: Player
-        movedPlayer = movePlayer (player g) f dir
+        movedPlayer | isJust fightStatus && (info.fromJust) fightStatus == PlayerLosing = player g
+                    | otherwise = movePlayer (player g) f dir
+            where fightStatus = (fightStatusFromPlayer.player) g
 
         movedEnemies :: [Enemy]
-        movedEnemies = map bestMoveEnemy (enemies g)
+        movedEnemies = map bestMoveEnemy' (enemies g)
         
+        bestMoveEnemy' :: Enemy -> Enemy
+        bestMoveEnemy' enemy | isJust fightStatus && (info.fromJust) fightStatus == PlayerWinning = enemy
+                             | otherwise = bestMoveEnemy enemy
+            where fightStatus = fightStatusFromEnemy enemy
+
         bestMoveEnemy e = moveEnemy e f optimalDirection
             where
                 possibleDirections = directionsEnemy e
