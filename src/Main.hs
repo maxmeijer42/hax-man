@@ -4,6 +4,7 @@ import Player hiding (Event)
 import Hexagon
 import Renderable
 import Input
+import System.Random
 import Control.Arrow ((>>>))
 import Data.Set (insert, delete)
 import Graphics.Gloss.Interface.IO.Game
@@ -25,8 +26,12 @@ view :: Game -> IO Picture
 view = return . render
 
 step :: Float -> Game -> IO Game
-step f game = return $ (finishBonus >>> finishEatingDots >>> startEatingDots) g { player = movedPlayer }
+step f game = spawnEnemies getStdGen purePart
+    
     where
+        purePart = finishEatingDots >>> startEatingDots >>> finishBonus
+                        $ g { player = movedPlayer }
+
         g :: Game
         g = game { gameTime = gameTime game + f}
 

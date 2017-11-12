@@ -1,7 +1,7 @@
 module Player where
 import Hexagon
 import Renderable
-import Graphics.Gloss.Data.Color (blue, red, white)
+import Graphics.Gloss.Data.Color (blue, red, white, green)
 import Graphics.Gloss.Data.Picture (Picture(..), circleSolid)
 
 data Player = Player {
@@ -33,10 +33,13 @@ instance Renderable Player where
             renderScore =  Scale 0.01 0.01 $ Translate 0 200 $ Color white $ Text ("Score: " ++ show (score p))
 
 instance Renderable Dot where
-    render d = Color red $ Circle 0.3
+    render d = Color green $ Circle 0.3
 
 instance Renderable PowerPellet where
-    render d = Color red $ circleSolid 0.4 
+    render d = Color green $ circleSolid 0.4 
+
+instance Renderable Enemy where
+    render e  = uncurry Translate (point $ posDirFromEnemy e) $ Color red $ Circle 0.8
 
 movePlayer :: Player -> Float -> ScaledDirection -> Player
 movePlayer p t d = p {posDirFromPlayer = move (posDirFromPlayer p) t d}

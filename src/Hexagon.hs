@@ -4,6 +4,7 @@ import Control.Arrow ((***),(>>>),(&&&))
 import Data.List (elemIndex, sortBy)
 import Data.Maybe (fromJust)
 import Data.Ratio ((%),denominator)
+import System.Random
 import Graphics.Gloss (Point)
 import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV, dotV)
 
@@ -24,6 +25,9 @@ data PosDir = PosDir{
     direction :: ScaledDirection,
     point :: Point
 }
+
+fromPosition :: Position -> PosDir
+fromPosition p = PosDir p noDirection (center p)
 
 -- A period of time
 type Period = Float
@@ -117,3 +121,6 @@ combineDirections d | length d <= 1 = d
         dotProduct = dotV (normalizeV avgVector) . toVector
         dotProducts :: [(Float, Direction)]
         dotProducts = sortBy (flip compare) $ map (dotProduct &&& id) [NorthEast .. ]
+
+isNextTo :: Position -> Position -> Bool
+isNextTo a b = any (\d -> a `translate` d == b) [NorthEast .. ] 

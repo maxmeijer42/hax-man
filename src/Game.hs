@@ -2,6 +2,7 @@ module Game where
 import Player
 import Hexagon
 import Renderable
+import System.Random
 import Data.Maybe (isJust)
 import Data.Set (Set,empty)
 import Control.Arrow ((&&&),(>>>))
@@ -99,7 +100,7 @@ instance Renderable Level where
 instance Renderable Game where
     render g = Translate (negate 100) 100 . Scale 20 20 $ render'
         where
-            render' = Pictures [render $ level g, render $ player g]
+            render' = Pictures $ [render $ level g, render $ player g] ++ map render (enemies g)
 
 canMove :: Game -> PosDir -> Direction -> Bool
 canMove Game{level=l} pd d = cellContent (getCell l (translate (nextPosition pd) d)) /= Wall
@@ -134,9 +135,9 @@ when False = const id
 when True  = ($)
 
 finishEatingDots :: Game -> Game
-finishEatingDots g@Game{player = p} = g  
+finishEatingDots g@Game{player = p, level = l} = g
         {
-            level = setCell (level g) eatPosition (Path Nothing Nothing),
+            level = setCell l eatPosition (Path Nothing Nothing),
             player = 
                 when hasPowerPellet giveBonus >>>
                 when hasDot incrementScore
@@ -163,3 +164,27 @@ finishBonus g@Game{gameTime = t, player = Player{bonus=(Just Event{timeStarted =
         then g{player=(player g){bonus=Nothing}} 
         else g
 finishBonus g = g
+
+isAvailable :: Game -> Position -> Bool
+isAvailable Game{player=p,level=l,enemies=es} pos = 
+    not (posDirFromPlayer p `isClose` pos) && 
+    cellContent (getCell l pos) /= Wall && 
+    not (any (\e->posDirFromEnemy e `isClose` pos) es)
+        where
+            isClose :: PosDir -> Position -> Bool
+            isClose pd pos = (pos `isNextTo` nextPosition pd) || (pos `isNextTo` position pd)
+
+availablePositions :: Game -> [Position]
+availablePositions game@Game{level=Level css}= filter (isAvailable game) (map cellPosition $ concat css)
+
+randomElement :: RandomGen g => [a] -> g -> a
+randomElement possibilities g = possibilities!!fst (randomR (0,length possibilities-1) g)
+
+spawnEnemy :: RandomGen g => Game -> g -> Game
+spawnEnemy game@Game{player=p,enemies = e} gen 
+    | null (availablePositions game) = game
+    | otherwise = game{enemies = Enemy (fromPosition pos) Nothing : e}
+    where pos = randomElement (availablePositions game) gen
+    
+spawnEnemies :: RandomGen g => IO g -> Game -> IO Game
+spawnEnemies ioGen game = spawnEnemy game <$> ioGen
