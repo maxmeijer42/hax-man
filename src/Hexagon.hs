@@ -8,7 +8,7 @@ import Data.Ratio ((%),denominator)
 import System.Random
 import Data.Aeson
 import GHC.Generics
-import Graphics.Gloss (Point)
+import Graphics.Gloss (Point, Path)
 import Graphics.Gloss.Data.Picture (Picture(..))
 import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV, dotV)
 
@@ -139,3 +139,15 @@ toPicture pd = uncurry Translate (point pd) . Rotate ((toAngle . unscaled . dire
 
 instance FromJSON Position
 instance ToJSON Position
+
+hexagonPath :: Path
+-- every vertex is the middle of the centers of 3 hexagons
+-- so for each 2 adjacent neighbouring hexagons, calculate the centroid
+hexagonPath = zipWith hexagonPoint (shift otherCenters) otherCenters
+    where
+        shift :: [a] -> [a]
+        shift (x:xs) = xs ++ [x]
+        hexagonPoint :: Point -> Point -> Point
+        hexagonPoint x y = middle [center (Position 0 0),x,y] - center (Position 0 0)
+        otherCenters :: [Point]
+        otherCenters = map (center . translate (Position 0 0)) [NorthEast .. NorthWest]

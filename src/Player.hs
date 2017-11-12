@@ -1,6 +1,4 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleInstances #-}
 module Player where
 import Hexagon
 import Renderable
@@ -50,7 +48,7 @@ instance Renderable PowerPellet where
     render d _ = Color green $ circleSolid 0.4 
 
 instance Renderable Enemy where
-    render e _ = uncurry Translate (point $ posDirFromEnemy e) $ Color red $ Circle 0.8
+    render e _ = uncurry Translate (point $ posDirFromEnemy e) $ Scale 0.6 0.6 $ Rotate 30 $ Color red $ Polygon hexagonPath 
 
 instance ToJSON Dot where
     toJSON _ = object []

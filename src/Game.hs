@@ -83,18 +83,6 @@ instance Renderable CellContent where
     render Wall t = Color green $ Circle 1
     render (Path d s) t = Pictures [render d t, render s t]
 
-hexagonPath :: Path
--- every vertex is the middle of the centers of 3 hexagons
--- so for each 2 adjacent neighbouring hexagons, calculate the centroid
-hexagonPath = zipWith hexagonPoint (shift otherCenters) otherCenters
-    where
-        shift :: [a] -> [a]
-        shift (x:xs) = xs ++ [x]
-        hexagonPoint :: Point -> Point -> Point
-        hexagonPoint x y = middle [center (Position 0 0),x,y] - center (Position 0 0)
-        otherCenters :: [Point]
-        otherCenters = map (center . translate (Position 0 0)) [NorthEast .. NorthWest]
-
 instance Renderable Cell where
     render (Cell pos content) t = uncurry Translate (center pos) pic
         where outline = Color (greyN 0.5) $ lineLoop hexagonPath
