@@ -64,7 +64,7 @@ step f game = if paused game then return game else spawnEnemies getStdGen purePa
                 possibleDirections = directionsEnemy e
                 lengthOfSteps = map getLengthOfDirection possibleDirections
                 getLengthOfDirection dir = distance (point (fromPosition (Hexagon.translate (position (posDirFromEnemy e)) (unscaled dir)))) (point (posDirFromPlayer(player g)))
-                optimalDirection = possibleDirections !! (fromJust (elemIndex (minimum lengthOfSteps) lengthOfSteps))
+                optimalDirection = possibleDirections !! fromJust (elemIndex (minimum lengthOfSteps) lengthOfSteps)
 
         dir :: ScaledDirection
         -- Take one of the directions or noDirection if there are none
