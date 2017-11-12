@@ -75,8 +75,8 @@ instance Initial Game where
     initial = Game initial initial [] empty 0 False
 
 instance Renderable CellContent where
-    render Wall = Color green $ Circle 1
-    render (Path d s) = Pictures [render d, render s]
+    render Wall t = Color green $ Circle 1
+    render (Path d s) t = Pictures [render d t, render s t]
 
 hexagonPath :: Path
 -- every vertex is the middle of the centers of 3 hexagons
@@ -91,19 +91,19 @@ hexagonPath = zipWith hexagonPoint (shift otherCenters) otherCenters
         otherCenters = map (center . translate (Position 0 0)) [NorthEast .. NorthWest]
 
 instance Renderable Cell where
-    render (Cell pos content) = uncurry Translate (center pos) pic
+    render (Cell pos content) t = uncurry Translate (center pos) pic
         where outline = Color (greyN 0.5) $ lineLoop hexagonPath
-              pic = Pictures [outline, render content]
+              pic = Pictures [outline, render content t]
 
 instance Renderable Level where
-    render (Level css) = Pictures $ map render (concat css)
+    render (Level css) t = Pictures $ map (`render` t) (concat css)
 
 instance Renderable Game where
-    render g = Translate (negate 100) 100 . Scale 20 20 $ render'
+    render g t = Translate (negate 100) 100 . Scale 20 20 $ render'
         where
             pause | paused g = [Scale 0.02 0.02 $ Translate 0 (negate 200) $ Color white $ Text "PAUSED"]
                   | otherwise = []
-            render' = Pictures $ pause ++ [render $ level g, render $ player g] ++ map render (enemies g)
+            render' = Pictures $ pause ++ [level g `render` t, player g `render` t] ++ map (`render` t) (enemies g)
 
 canMove :: Game -> PosDir -> Direction -> Bool
 canMove Game{level=l} pd d = cellContent (getCell l (translate (nextPosition pd) d)) /= Wall
@@ -143,10 +143,14 @@ finishEatingDots g@Game{player = p, level = l} = g
             level = setCell l eatPosition (Path Nothing Nothing),
             player = 
                 when hasPowerPellet giveBonus >>>
-                when hasDot incrementScore
+                when hasDot incrementScore >>>
+                when (hasDot || hasPowerPellet) stopEating
                 $ p
         }
     where
+        stopEating :: Player -> Player
+        stopEating p = p{eatStatus = Nothing}
+
         giveBonus :: Player -> Player
         giveBonus p = p{bonus = Just $ Event (gameTime g) ()}
 

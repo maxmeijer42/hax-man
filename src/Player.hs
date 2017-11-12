@@ -1,6 +1,7 @@
 module Player where
 import Hexagon
 import Renderable
+import Data.Maybe (fromJust, isJust)
 import Graphics.Gloss.Data.Color (blue, red, white, green)
 import Graphics.Gloss.Data.Picture (Picture(..), circleSolid, arcSolid)
 
@@ -27,19 +28,24 @@ data Event a = Event {
 data FightType = Winning | Losing
 
 instance Renderable Player where
-    render p = Pictures [renderPlayer, renderScore]
+    render p f = Pictures [renderPlayer, renderScore]
         where 
-            renderPlayer = toPicture (posDirFromPlayer p) $ Color blue $ arcSolid 40 (negate 40) 0.8
+            mouthAngle :: Float
+            mouthAngle | isJust (eatStatus p) && eatTimeOffset > 0 && eatTimeOffset < 0.5 = 2*(0.5-eatTimeOffset)*40
+                       | isJust (eatStatus p) && eatTimeOffset > 0.5 = 0.1
+                       | otherwise = 40
+            eatTimeOffset = f-(timeStarted.fromJust.eatStatus) p-1
+            renderPlayer = toPicture (posDirFromPlayer p) $ Color blue $ arcSolid mouthAngle (negate mouthAngle) 0.8
             renderScore =  Scale 0.01 0.01 $ Translate 0 200 $ Color white $ Text ("Score: " ++ show (score p))
 
 instance Renderable Dot where
-    render d = Color green $ Circle 0.3
+    render d _ = Color green $ Circle 0.3
 
 instance Renderable PowerPellet where
-    render d = Color green $ circleSolid 0.4 
+    render d _ = Color green $ circleSolid 0.4 
 
 instance Renderable Enemy where
-    render e  = uncurry Translate (point $ posDirFromEnemy e) $ Color red $ Circle 0.8
+    render e _ = uncurry Translate (point $ posDirFromEnemy e) $ Color red $ Circle 0.8
 
 movePlayer :: Player -> Float -> ScaledDirection -> Player
 movePlayer p t d = p {posDirFromPlayer = move (posDirFromPlayer p) t d}

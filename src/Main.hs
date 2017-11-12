@@ -24,7 +24,7 @@ input (EventKey k   Up   _ _) g = return g {keysPressed = delete k (keysPressed 
 input _ g = return g
 
 view :: Game -> IO Picture
-view = return . render
+view g = return (g `render` (gameTime g))
 
 step :: Float -> Game -> IO Game
 step f game = if paused game then return game else spawnEnemies getStdGen purePart
