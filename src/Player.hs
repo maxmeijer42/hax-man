@@ -3,7 +3,7 @@ module Player where
 import Hexagon
 import Renderable
 import Data.Aeson
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (fromJust, isJust, isNothing)
 import GHC.Generics (Generic)
 import Graphics.Gloss.Data.Color (blue, red, white, green)
 import Graphics.Gloss.Data.Picture (Picture(..), circleSolid, arcSolid)
@@ -48,7 +48,12 @@ instance Renderable PowerPellet where
     render d _ = Color green $ circleSolid 0.4 
 
 instance Renderable Enemy where
-    render e _ = uncurry Translate (point $ posDirFromEnemy e) $ Scale 0.6 0.6 $ Rotate 30 $ Color red $ Polygon hexagonPath 
+    render e t = uncurry Translate (point $ posDirFromEnemy e) $ Scale 0.6 0.6 $ Rotate rotation $ Color red $ Polygon hexagonPath where
+        rotation :: Float
+        rotation | isJust fightStatus && (info.fromJust) fightStatus == PlayerLosing = 30 + (t - timeStarted (fromJust fightStatus)) * 500
+                 | otherwise = 30
+            where
+                fightStatus = fightStatusFromEnemy e
 
 instance ToJSON Dot where
     toJSON _ = object []
@@ -66,7 +71,7 @@ moveEnemy :: Enemy -> Float -> ScaledDirection -> Enemy
 moveEnemy e t d = e {posDirFromEnemy = move (posDirFromEnemy e) t d}
 
 hitsPlayer :: Enemy -> Player -> Bool
-hitsPlayer e p = distance ((point.posDirFromPlayer) p) ((point.posDirFromEnemy) e) < 0.8
+hitsPlayer e p = isNothing (fightStatusFromEnemy e) && distance ((point.posDirFromPlayer) p) ((point.posDirFromEnemy) e) < 0.8
 
 startFighting :: Player -> Float -> Player
 startFighting p@Player{bonus=b} t = p{fightStatusFromPlayer = Just $ Event t i} where

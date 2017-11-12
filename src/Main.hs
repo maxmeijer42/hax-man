@@ -50,6 +50,9 @@ step f game = if paused game then return game else spawnEnemies getStdGen purePa
         purePart = performFights >>> finishEatingDots >>> startEatingDots >>> finishBonus
                    $ g { player = movedPlayer, enemies = movedEnemies }
 
+        cleanUpDeadEnemies :: Game -> Game
+        cleanUpDeadEnemies g = g{enemies = filter (shouldBeRemoved f) (enemies g)}
+        
         performFights :: Game -> Game
         performFights g | null attackedEnemies = g
                         | otherwise = g {

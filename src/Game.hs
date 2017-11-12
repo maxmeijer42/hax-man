@@ -74,8 +74,8 @@ instance Initial Player where
               dir = noSpeed East
 
 instance Initial Level where
-        initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path (Just $ Dot Nothing) Nothing
-
+    initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path (Just $ Dot Nothing) Nothing    
+    
 instance Initial Game where
     initial = Game initial initial [] empty 0 False
 
@@ -203,3 +203,6 @@ loadLevel s | isJust loadedLevel = initial{level=fromJust loadedLevel}
     where
         loadedLevel :: Maybe Level
         loadedLevel = decode s
+
+shouldBeRemoved :: Float -> Enemy -> Bool
+shouldBeRemoved t Enemy{fightStatusFromEnemy = f} = isJust f && timeStarted (fromJust f) + 1 < t
