@@ -6,7 +6,7 @@ import System.Random
 import Data.Maybe (isJust)
 import Data.Set (Set,empty)
 import Control.Arrow ((&&&),(>>>))
-import Graphics.Gloss.Data.Color (green, red, greyN)
+import Graphics.Gloss.Data.Color (green, red, greyN, white)
 import Graphics.Gloss.Interface.IO.Game (Key)
 import Graphics.Gloss.Data.Picture (Picture(..),lineLoop,Path,Point)
 newtype Level = Level [[Cell]] deriving Show
@@ -24,7 +24,8 @@ data Game = Game {
     level :: Level,
     enemies :: [Enemy],
     keysPressed :: Set Key,
-    gameTime :: Float
+    gameTime :: Float,
+    paused :: Bool
 }
 
 data Cell = Cell {
@@ -71,7 +72,7 @@ instance Initial Level where
         initial = levelFromCellContents $ surroundWithWalls $ replicate 5 $ replicate 5 $ Path (Just $ Dot Nothing) Nothing
 
 instance Initial Game where
-    initial = Game initial initial [] empty 0
+    initial = Game initial initial [] empty 0 False
 
 instance Renderable CellContent where
     render Wall = Color green $ Circle 1
@@ -100,7 +101,9 @@ instance Renderable Level where
 instance Renderable Game where
     render g = Translate (negate 100) 100 . Scale 20 20 $ render'
         where
-            render' = Pictures $ [render $ level g, render $ player g] ++ map render (enemies g)
+            pause | paused g = [Scale 0.02 0.02 $ Translate 0 (negate 200) $ Color white $ Text "PAUSED"]
+                  | otherwise = []
+            render' = Pictures $ pause ++ [render $ level g, render $ player g] ++ map render (enemies g)
 
 canMove :: Game -> PosDir -> Direction -> Bool
 canMove Game{level=l} pd d = cellContent (getCell l (translate (nextPosition pd) d)) /= Wall

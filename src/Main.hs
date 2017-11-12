@@ -18,16 +18,16 @@ main = playIO (InWindow "Haxman" (400, 400) (0, 0)) -- Or FullScreen
               step             -- Step function
 
 input :: Event -> Game -> IO Game
-input (EventKey k Down _ _) g = return g {keysPressed = insert k (keysPressed g)}
-input (EventKey k Up _ _)   g = return g {keysPressed = delete k (keysPressed g)}
+input (EventKey (SpecialKey KeySpace) Down _ _) g = return g {paused = not (paused g)}
+input (EventKey k   Down _ _) g = return g {keysPressed = insert k (keysPressed g)}
+input (EventKey k   Up   _ _) g = return g {keysPressed = delete k (keysPressed g)}
 input _ g = return g
 
 view :: Game -> IO Picture
 view = return . render
 
 step :: Float -> Game -> IO Game
-step f game = spawnEnemies getStdGen purePart
-    
+step f game = if paused game then return game else spawnEnemies getStdGen purePart
     where
         purePart = finishEatingDots >>> startEatingDots >>> finishBonus
                         $ g { player = movedPlayer }
