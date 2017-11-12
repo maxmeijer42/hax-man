@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Hexagon where
 import Control.Monad (join)
 import Control.Arrow ((***),(>>>),(&&&))
@@ -5,12 +6,14 @@ import Data.List (elemIndex, sortBy)
 import Data.Maybe (fromJust)
 import Data.Ratio ((%),denominator)
 import System.Random
+import Data.Aeson
+import GHC.Generics
 import Graphics.Gloss (Point)
 import Graphics.Gloss.Data.Picture (Picture(..))
 import Graphics.Gloss.Data.Vector (Vector, magV, mulSV, normalizeV, dotV)
 
 -- Represents a position in the grid
-data Position = Position {x :: Int, y :: Int} deriving (Show, Eq)
+data Position = Position {x :: Int, y :: Int} deriving (Show, Eq, Generic)
 
 data Direction = NorthEast | East | SouthEast | SouthWest | West | NorthWest
     deriving (Enum, Eq, Show, Ord, Bounded)
@@ -133,3 +136,6 @@ isNextTo a b = any (\d -> a `translate` d == b) [NorthEast .. ]
 
 toPicture :: PosDir -> Picture -> Picture
 toPicture pd = uncurry Translate (point pd) . Rotate ((toAngle . unscaled . direction) pd)
+
+instance FromJSON Position
+instance ToJSON Position

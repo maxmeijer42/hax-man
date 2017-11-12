@@ -1,15 +1,20 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Game where
 import Player
 import Hexagon
 import Renderable
+import Data.Aeson
+import Data.ByteString.Lazy (ByteString)
 import System.Random
-import Data.Maybe (isJust)
+import Data.Maybe (isJust, fromJust)
 import Data.Set (Set,empty)
+import GHC.Generics (Generic)
 import Control.Arrow ((&&&),(>>>))
 import Graphics.Gloss.Data.Color (green, red, greyN, white)
 import Graphics.Gloss.Interface.IO.Game (Key)
 import Graphics.Gloss.Data.Picture (Picture(..),lineLoop,Path,Point)
-newtype Level = Level [[Cell]] deriving Show
+newtype Level = Level [[Cell]] deriving (Show, Generic)
 getCell :: Level -> Position -> Cell
 getCell (Level css) (Position x y) = (css!!y)!!x
 setCell :: Level -> Position -> CellContent -> Level
@@ -31,11 +36,11 @@ data Game = Game {
 data Cell = Cell {
     cellPosition :: Position,
     cellContent :: CellContent
-} deriving Show
+} deriving (Show,Generic)
 data CellContent = Path {
     pathDot :: Maybe Dot,
     pathPowerPellet :: Maybe PowerPellet
-} | Wall deriving (Show,Eq)
+} | Wall deriving (Show,Eq,Generic)
 
 levelFromCellContents :: [[CellContent]] -> Level
 levelFromCellContents ccss = Level $ zipWith' Cell positionGrid ccss
@@ -104,6 +109,13 @@ instance Renderable Game where
             pause | paused g = [Scale 0.02 0.02 $ Translate 0 (negate 200) $ Color white $ Text "PAUSED"]
                   | otherwise = []
             render' = Pictures $ pause ++ [level g `render` t, player g `render` t] ++ map (`render` t) (enemies g)
+
+instance ToJSON CellContent
+instance FromJSON CellContent
+instance ToJSON Cell
+instance FromJSON Cell
+instance ToJSON Level
+instance FromJSON Level
 
 canMove :: Game -> PosDir -> Direction -> Bool
 canMove Game{level=l} pd d = cellContent (getCell l (translate (nextPosition pd) d)) /= Wall
@@ -195,3 +207,10 @@ spawnEnemy game@Game{player=p,enemies = e} gen
     
 spawnEnemies :: RandomGen g => IO g -> Game -> IO Game
 spawnEnemies ioGen game = spawnEnemy game <$> ioGen
+
+loadLevel :: ByteString -> Game
+loadLevel s | isJust loadedLevel = initial{level=fromJust loadedLevel}
+            | otherwise = initial
+    where
+        loadedLevel :: Maybe Level
+        loadedLevel = decode s

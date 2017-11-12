@@ -1,7 +1,12 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Player where
 import Hexagon
 import Renderable
+import Data.Aeson
 import Data.Maybe (fromJust, isJust)
+import GHC.Generics (Generic)
 import Graphics.Gloss.Data.Color (blue, red, white, green)
 import Graphics.Gloss.Data.Picture (Picture(..), circleSolid, arcSolid)
 
@@ -18,13 +23,13 @@ data Enemy = Enemy {
     fightStatusFromEnemy :: Maybe (Event FightType)
 }
 
-newtype Dot = Dot {dotEatEvent :: Maybe (Event ())} deriving (Show,Eq)
-newtype PowerPellet = PowerPellet {powerPelletEatEvent :: Maybe (Event ())} deriving (Show,Eq)
+newtype Dot = Dot {dotEatEvent :: Maybe (Event ())} deriving (Show,Eq, Generic)
+newtype PowerPellet = PowerPellet {powerPelletEatEvent :: Maybe (Event ())} deriving (Show,Eq, Generic)
 
 data Event a = Event {
     timeStarted :: Period,
     info :: a
-} deriving (Show, Eq)
+} deriving (Show, Eq,Generic)
 data FightType = Winning | Losing
 
 instance Renderable Player where
@@ -46,6 +51,15 @@ instance Renderable PowerPellet where
 
 instance Renderable Enemy where
     render e _ = uncurry Translate (point $ posDirFromEnemy e) $ Color red $ Circle 0.8
+
+instance ToJSON Dot where
+    toJSON _ = object []
+instance FromJSON Dot where
+    parseJSON x = return $ Dot Nothing
+instance ToJSON PowerPellet where
+    toJSON _ = object []
+instance FromJSON PowerPellet where
+    parseJSON x = return $ PowerPellet Nothing
 
 movePlayer :: Player -> Float -> ScaledDirection -> Player
 movePlayer p t d = p {posDirFromPlayer = move (posDirFromPlayer p) t d}
