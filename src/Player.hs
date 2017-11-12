@@ -66,8 +66,3 @@ movePlayer p t d = p {posDirFromPlayer = move (posDirFromPlayer p) t d}
 
 moveEnemy :: Enemy -> Float -> ScaledDirection -> Enemy 
 moveEnemy e t d = e {posDirFromEnemy = move (posDirFromEnemy e) t d}
-
-
---moveEnemies :: [Enemy] -> Player -> Float -> [Enemy] 
---moveEnemies (e:es) p t = moveEnemies es p t ++ [(moveEnemy e t)]
---moveEnemies [] p t = []
